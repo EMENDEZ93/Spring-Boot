@@ -10,7 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.springboot.app.models.entity.Cliente;
 
-@Repository
+/*@Repository("clienteDaoJPA")*/
+@Repository("clienteDaoJPA")
 public class ClienteDaoImpl implements IClienteDao {
 
 	@PersistenceContext
@@ -20,7 +21,6 @@ public class ClienteDaoImpl implements IClienteDao {
 	@Transactional(readOnly=true)
 	@Override
 	public List<Cliente> findAll() {
-		// TODO Auto-generated method stub
 		return entityManager.createQuery("from Cliente").getResultList();
 	}
 
