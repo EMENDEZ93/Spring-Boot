@@ -2,31 +2,69 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8" />
+<style type="text/css">
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+li a:hover {
+    background-color: #111;
+}
+</style>
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
 <title th:text="${titulo}"></title>
 </head>
 <body>
-	<h1 th:text="${titulo}"></h1>
 
-	<table>
-		<thead>
-			<tr>
-				<th>Id</th>
-				<th>Nombre</th>
-				<th>Apellido</th>
-				<th>Email</th>
-				<th>Fecha</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr th:each="cliente: ${clientes}">
-				<td th:text="${cliente.id}" ></td>
-				<td th:text="${cliente.nombre}" ></td>
-				<td th:text="${cliente.apellido}" ></td>
-				<td th:text="${cliente.email}" ></td>
-				<td th:text="${cliente.createAt}" ></td>
-			</tr>
-		</tbody>
-	</table>
+	<ul>
+		<li><a class="active" href="#home">Home</a></li>
+		<li><a th:href="@{/listar}" >Cliente</a></li>
+		<li><a >C</a></li>
+		<li><a href="#about">A</a></li>
+	</ul>
 
+	<div class="container">
+		<h1 class="border" th:text="${titulo}"></h1>
+
+		<a th:href="@{/form}" > crear cliente  </a>
+
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Id</th>
+					<th>Nombre</th>
+					<th>Apellido</th>
+					<th>Email</th>
+					<th>Fecha</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="cliente: ${clientes}">
+					<td th:text="${cliente.id}"></td>
+					<td th:text="${cliente.nombre}"></td>
+					<td th:text="${cliente.apellido}"></td>
+					<td th:text="${cliente.email}"></td>
+					<td th:text="${cliente.createAt}"></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 </body>
 </html>
