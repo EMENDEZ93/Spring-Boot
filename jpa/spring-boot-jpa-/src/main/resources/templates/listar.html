@@ -54,6 +54,7 @@ li a:hover {
 					<th>Email</th>
 					<th>Fecha</th>
 					<th>Editar</th>
+					<th>Eliminar</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -64,6 +65,7 @@ li a:hover {
 					<td th:text="${cliente.email}"></td>
 					<td th:text="${cliente.createAt}"></td>
 					<td><a class="btn btn-primary btn-xs"  th:href="@{/form/}+${cliente.id}" >editar</a></td>
+					<td><a class="btn btn-danger btn-xs"  th:href="@{/eliminar/}+${cliente.id}" onclick="return confirm('¿estas seguro de eliminar este registro?')" >eliminar</a></td>
 				</tr>
 			</tbody>
 		</table>
