@@ -1,17 +1,11 @@
 package com.springboot.app.dao;
 
-import java.util.List;
+import java.io.Serializable;
+
+import org.springframework.data.repository.CrudRepository;
 
 import com.springboot.app.models.Cliente;
 
-public interface IClienteDao {
-
-	public List<Cliente> findAll();
-	
-	public void save(Cliente cliente);
-	
-	public Cliente findOne(Long id);
-	
-	public void delete(Long id);
+public interface IClienteDao extends CrudRepository<Cliente, Serializable>{
 	
 }
