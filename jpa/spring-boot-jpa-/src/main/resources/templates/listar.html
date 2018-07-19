@@ -53,6 +53,7 @@ li a:hover {
 					<th>Apellido</th>
 					<th>Email</th>
 					<th>Fecha</th>
+					<th>Editar</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -62,6 +63,7 @@ li a:hover {
 					<td th:text="${cliente.apellido}"></td>
 					<td th:text="${cliente.email}"></td>
 					<td th:text="${cliente.createAt}"></td>
+					<td><a class="btn btn-primary btn-xs"  th:href="@{/form/}+${cliente.id}" >editar</a></td>
 				</tr>
 			</tbody>
 		</table>
