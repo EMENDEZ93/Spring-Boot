@@ -1,2 +1,0 @@
-INSERT INTO clientes (id, nombre, apellido, email, create_at) values (1, 'Carola', 'Ballesteros', 'carola@unac.edu.co', '2018-07-18');
-INSERT INTO clientes (id, nombre, apellido, email, create_at) values (2, 'Edwin', 'Mendez', 'emendez@unac.edu.co', '2018-07-19');
