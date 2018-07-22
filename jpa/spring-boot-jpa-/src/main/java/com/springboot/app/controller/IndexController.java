@@ -1,5 +1,6 @@
 package com.springboot.app.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -44,6 +45,7 @@ public class IndexController {
 	@Autowired
 	private IClienteService clienteService;
 	
+	private final static String UPLOADS_FOLDER = "uploads";
 	
 	@RequestMapping(value="/listar", method=RequestMethod.GET)
 	public String listar(@RequestParam(name="page", defaultValue="0") int page, Model model) {
@@ -78,9 +80,22 @@ public class IndexController {
 		
 		
 		if(!foto.isEmpty()) {
+			
+			if(cliente.getId() != 0L && cliente.getId() > 0 &&
+			   cliente.getFoto() != null && cliente.getFoto().length() > 0) {
+				
+				Path rootPath = Paths.get(UPLOADS_FOLDER).resolve(cliente.getFoto()).toAbsolutePath();
+				File archivo = rootPath.toFile();
+				
+				if(archivo.exists() && archivo.canRead()) {
+					archivo.delete();
+				}			
+			
+			}
+			
 			String uniqueFilename = UUID.randomUUID() +"_" + foto.getOriginalFilename();
 			
-			Path rootPath = Paths.get("uploads").resolve(uniqueFilename);
+			Path rootPath = Paths.get(UPLOADS_FOLDER).resolve(uniqueFilename);
 			Path rootAbsolutPath = rootPath.toAbsolutePath();
 			
 			try {
@@ -129,8 +144,19 @@ public class IndexController {
 	@RequestMapping(value="/eliminar/{id}", method=RequestMethod.GET)
 	public String eliminar(@PathVariable(value="id")Long id, RedirectAttributes flash) {
 		if(id > 0) {
+			Cliente cliente = clienteService.findOne(id); 
 			clienteService.delete(id);
 			flash.addFlashAttribute("success", "cliente eliminado con exito");
+			
+			Path rootPath = Paths.get(UPLOADS_FOLDER).resolve(cliente.getFoto()).toAbsolutePath();
+			File archivo = rootPath.toFile();
+			
+			if(archivo.exists() && archivo.canRead()) {
+				if(archivo.delete()) {
+					flash.addFlashAttribute("info", "Foto " + cliente.getFoto() + " eliminada con Exito.");
+				}
+			}
+			
 		}
 		return "redirect:/listar";
 	}	
@@ -154,7 +180,7 @@ public class IndexController {
 	
 	@RequestMapping(value="/uploads/{filename:.+}")
 	public ResponseEntity<Resource> verFoto(@PathVariable String filename){
-		Path pathFoto = Paths.get("uploads").resolve(filename).toAbsolutePath();
+		Path pathFoto = Paths.get(UPLOADS_FOLDER).resolve(filename).toAbsolutePath();
 		
 		Resource recurso = null;
 		try {
