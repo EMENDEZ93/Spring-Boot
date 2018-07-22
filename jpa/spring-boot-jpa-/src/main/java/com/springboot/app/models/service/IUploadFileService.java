@@ -14,4 +14,8 @@ public interface IUploadFileService {
 	
 	public boolean delete(String filename);
 	
+	public void deleteAll();
+	
+	public void init() throws IOException;
+	
 }
