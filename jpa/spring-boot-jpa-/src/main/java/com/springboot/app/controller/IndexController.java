@@ -1,17 +1,11 @@
 package com.springboot.app.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
-import java.util.UUID;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.springboot.app.models.Cliente;
 import com.springboot.app.models.service.IClienteService;
+import com.springboot.app.models.service.IUploadFileService;
 //import com.springboot.app.util.paginator.PageRender;
 
 @Controller
@@ -44,92 +39,79 @@ public class IndexController {
 
 	@Autowired
 	private IClienteService clienteService;
-	
-	private final static String UPLOADS_FOLDER = "uploads";
-	
-	@RequestMapping(value="/listar", method=RequestMethod.GET)
-	public String listar(@RequestParam(name="page", defaultValue="0") int page, Model model) {
-		
+
+	@Autowired
+	private IUploadFileService uploadFileService;
+
+	@RequestMapping(value = "/listar", method = RequestMethod.GET)
+	public String listar(@RequestParam(name = "page", defaultValue = "0") int page, Model model) {
+
 		Pageable pageRequest = PageRequest.of(page, 3);
-		
+
 		Page<Cliente> clientes = clienteService.findAll(pageRequest);
-		//PageRender<Cliente> pageRender = new PageRender("/listar", clientes);
-		
+		// PageRender<Cliente> pageRender = new PageRender("/listar", clientes);
+
 		model.addAttribute("titulo", "listar clientes");
 		model.addAttribute("clientes", clientes);
-		//model.addAttribute("pages", pageRender);
+		// model.addAttribute("pages", pageRender);
 		return "listar";
 	}
-	
-	
-	@RequestMapping(value="/form")
-	public String crear( Map<String, Object> model) {
+
+	@RequestMapping(value = "/form")
+	public String crear(Map<String, Object> model) {
 		Cliente cliente = new Cliente();
 		model.put("cliente", cliente);
 		model.put("titulo", "Formulario Cliente");
 		return "form";
-	}	
-	
-	
-	@RequestMapping(value="/form", method=RequestMethod.POST)
-	public String guardar(@Valid Cliente cliente, BindingResult result, @RequestParam("file") MultipartFile foto, RedirectAttributes flash, SessionStatus status) {
-		
-		if(result.hasErrors()) {
+	}
+
+	@RequestMapping(value = "/form", method = RequestMethod.POST)
+	public String guardar(@Valid Cliente cliente, BindingResult result, @RequestParam("file") MultipartFile foto,
+			RedirectAttributes flash, SessionStatus status) {
+
+		if (result.hasErrors()) {
 			return "form";
 		}
-		
-		
-		if(!foto.isEmpty()) {
-			
-			if(cliente.getId() != 0L && cliente.getId() > 0 &&
-			   cliente.getFoto() != null && cliente.getFoto().length() > 0) {
-				
-				Path rootPath = Paths.get(UPLOADS_FOLDER).resolve(cliente.getFoto()).toAbsolutePath();
-				File archivo = rootPath.toFile();
-				
-				if(archivo.exists() && archivo.canRead()) {
-					archivo.delete();
-				}			
-			
+
+		if (!foto.isEmpty()) {
+
+			if (cliente.getId() != 0L && cliente.getId() > 0 && cliente.getFoto() != null
+					&& cliente.getFoto().length() > 0) {
+				uploadFileService.delete(cliente.getFoto());
 			}
-			
-			String uniqueFilename = UUID.randomUUID() +"_" + foto.getOriginalFilename();
-			
-			Path rootPath = Paths.get(UPLOADS_FOLDER).resolve(uniqueFilename);
-			Path rootAbsolutPath = rootPath.toAbsolutePath();
-			
+
+			String uniqueFilename = null;
 			try {
-				Files.copy(foto.getInputStream(), rootAbsolutPath);
-				flash.addFlashAttribute("info", "Foto almacenada correctamente '" + uniqueFilename + "'");
-				cliente.setFoto(uniqueFilename);
+				uniqueFilename = uploadFileService.copy(foto);
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+			flash.addFlashAttribute("info", "Foto almacenada correctamente '" + uniqueFilename + "'");
+			cliente.setFoto(uniqueFilename);
+
 		}
-		
-		String mensajeFlash = (cliente.getId() != 0L)? "editado con exito":"creado con exito";
-		
+
+		String mensajeFlash = (cliente.getId() != 0L) ? "editado con exito" : "creado con exito";
+
 		clienteService.save(cliente);
 		status.setComplete();
 		flash.addFlashAttribute("success", mensajeFlash);
 		return "redirect:listar";
-	}		
+	}
 
-	
-	@RequestMapping(value="/form/{id}", method=RequestMethod.GET)
-	public String editar(@PathVariable(value="id")Long id, Map<String, Object> model, RedirectAttributes flash) {
-		
+	@RequestMapping(value = "/form/{id}", method = RequestMethod.GET)
+	public String editar(@PathVariable(value = "id") Long id, Map<String, Object> model, RedirectAttributes flash) {
+
 		Cliente cliente = null;
-		
-		if(id > 0) {
+
+		if (id > 0) {
 			cliente = clienteService.findOne(id);
-			
-			if(cliente == null) {
+
+			if (cliente == null) {
 				flash.addFlashAttribute("error", "el cliente no existe");
 			}
-			
-			
+
 		} else {
 			flash.addFlashAttribute("error", "el id no puede se cero");
 			return "redirect:listar";
@@ -138,73 +120,52 @@ public class IndexController {
 		model.put("cliente", cliente);
 		model.put("titulo", "Editar cliente");
 		return "form";
-	}	
+	}
 
-	
-	@RequestMapping(value="/eliminar/{id}", method=RequestMethod.GET)
-	public String eliminar(@PathVariable(value="id")Long id, RedirectAttributes flash) {
-		if(id > 0) {
-			Cliente cliente = clienteService.findOne(id); 
+	@RequestMapping(value = "/eliminar/{id}", method = RequestMethod.GET)
+	public String eliminar(@PathVariable(value = "id") Long id, RedirectAttributes flash) {
+		if (id > 0) {
+			Cliente cliente = clienteService.findOne(id);
 			clienteService.delete(id);
 			flash.addFlashAttribute("success", "cliente eliminado con exito");
-			
-			Path rootPath = Paths.get(UPLOADS_FOLDER).resolve(cliente.getFoto()).toAbsolutePath();
-			File archivo = rootPath.toFile();
-			
-			if(archivo.exists() && archivo.canRead()) {
-				if(archivo.delete()) {
-					flash.addFlashAttribute("info", "Foto " + cliente.getFoto() + " eliminada con Exito.");
-				}
+
+			if (uploadFileService.delete(cliente.getFoto())) {
+				flash.addFlashAttribute("info", "Foto " + cliente.getFoto() + " eliminada con Exito.");
 			}
-			
+
 		}
 		return "redirect:/listar";
-	}	
-	
-	
-	@RequestMapping(value="/ver/{id}")
-	public String ver(@PathVariable(value="id")Long id, Map<String, Object> model, RedirectAttributes flash) {
+	}
+
+	@RequestMapping(value = "/ver/{id}")
+	public String ver(@PathVariable(value = "id") Long id, Map<String, Object> model, RedirectAttributes flash) {
 		Cliente cliente = clienteService.findOne(id);
-		
-		if(cliente == null) {
+
+		if (cliente == null) {
 			flash.addFlashAttribute("error", "Cliente no existe en la base de datos");
-			return "redirect:/listar"; 
+			return "redirect:/listar";
 		}
-		
+
 		model.put("cliente", cliente);
 		model.put("titulo", "detalle cliente");
 		return "ver";
-		
+
 	}
-	
-	
-	@RequestMapping(value="/uploads/{filename:.+}")
-	public ResponseEntity<Resource> verFoto(@PathVariable String filename){
-		Path pathFoto = Paths.get(UPLOADS_FOLDER).resolve(filename).toAbsolutePath();
-		
+
+	@RequestMapping(value = "/uploads/{filename:.+}")
+	public ResponseEntity<Resource> verFoto(@PathVariable String filename) {
+
 		Resource recurso = null;
 		try {
-			recurso = new UrlResource(pathFoto.toUri());
-			if(!recurso.exists() && recurso.isReadable()) {
-				throw new RuntimeException("Error: no se puede cargar la imagen");
-			}
+			recurso = uploadFileService.load(filename);
 		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + recurso.getFilename() + "\"")
+
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + recurso.getFilename() + "\"")
 				.body(recurso);
 	}
-	
+
 }
-
-
-
-
-
-
-
-
-
-
-
